@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+import sys
+
+if '--console' in sys.argv:
+    from notifymuch.messages import Messages
+    summary = Messages().summary()
+    if summary:
+        print(summary)
+else:
+    from notifymuch.service import show_notification
+    show_notification()
