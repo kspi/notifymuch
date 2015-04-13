@@ -1,4 +1,6 @@
 import pickle
+import sys
+
 
 class PersistentDict(dict):
     def __init__(self, filename):

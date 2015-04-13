@@ -4,7 +4,6 @@ import dbus
 import dbus.bus
 import dbus.service
 import dbus.mainloop.glib
-import xdg.BaseDirectory
 from notifymuch.messages import Messages
 
 
@@ -12,6 +11,7 @@ __all__ = ["show_notification"]
 
 
 DBUS_NAME = 'net.wemakethings.NotifymuchService'
+
 
 class NotifymuchService(dbus.service.Object):
     ICON = '/usr/share/icons/gnome/scalable/status/mail-unread-symbolic.svg'

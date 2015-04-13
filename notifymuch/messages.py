@@ -1,7 +1,6 @@
 from email.utils import parseaddr
 import configparser
 import os
-import sys
 import time
 import xdg.BaseDirectory
 import notmuch
