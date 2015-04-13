@@ -5,7 +5,6 @@ import os
 import pickle
 import sys
 import time
-import time
 
 from gi.repository import Notify, GLib
 import dbus
@@ -15,6 +14,7 @@ import dbus.service
 import notmuch
 import xdg.BaseDirectory
 
+
 APPLICATION_NAME = 'notmuch-notify'
 DBUS_NAME = 'net.wemakethings.NotmuchNotify'
 
@@ -23,6 +23,11 @@ CONFIG_DIR = xdg.BaseDirectory.save_config_path(APPLICATION_NAME)
 
 LAST_SEEN_FILE = os.path.join(CACHE_DIR, 'last_seen')
 CONFIG_FILE = os.path.join(CONFIG_DIR, APPLICATION_NAME + '.cfg')
+
+NONINTERESTING_TAGS = frozenset([
+        'inbox', 'unread', 'attachment', 'replied', 'sent', 'encrypted',
+        'signed'])
+
 
 class LastSeen(dict):
     def __enter__(self):
@@ -34,15 +39,17 @@ class LastSeen(dict):
         except Exception as e:
             print("notmuch-notify: warning: {}".format(e), file=sys.stderr)
         return self
+
     def __exit__(self, type, value, traceback):
         with open(LAST_SEEN_FILE, 'wb') as f:
             pickle.dump(self, f)
+
 
 def exclude_recently_seen(messages):
     with LastSeen() as last_seen:
         now = time.time()
         for k in list(last_seen.keys()):
-            if now - last_seen[k] > 60 * 60 * 24 * 2: # Two days
+            if now - last_seen[k] > 60 * 60 * 24 * 2:  # Two days
                 del last_seen[k]
         for message in messages:
             m_id = message.get_message_id()
@@ -50,17 +57,19 @@ def exclude_recently_seen(messages):
                 last_seen[m_id] = now
                 yield message
 
-NONINTERESTING_TAGS = frozenset(['inbox', 'unread', 'attachment', 'replied', 'sent', 'encrypted', 'signed'])
+
 def filter_tags(ts):
     for t in ts:
         if t not in NONINTERESTING_TAGS:
             yield t
+
 
 def ellipsize(text, length=80):
     if len(text) > length:
         return text[:length - 1] + '…'
     else:
         return text
+
 
 def pretty_date(time=None):
     """
@@ -72,7 +81,7 @@ def pretty_date(time=None):
     now = datetime.now()
     if type(time) is int:
         diff = now - datetime.fromtimestamp(time)
-    elif isinstance(time,datetime):
+    elif isinstance(time, datetime):
         diff = now - time
     elif not time:
         diff = now - now
@@ -86,7 +95,9 @@ def pretty_date(time=None):
         if number == 1:
             return "a {unit} ago".format(unit=unit)
         else:
-            return "{number} {unit}s ago".format(number=round(number), unit=unit)
+            return "{number} {unit}s ago".format(
+                    number=round(number),
+                    unit=unit)
 
     if day_diff == 0:
         if second_diff < 10:
@@ -94,7 +105,7 @@ def pretty_date(time=None):
         if second_diff < 60:
             return ago(second_diff, "second")
         if second_diff < 120:
-            return  "a minute ago"
+            return "a minute ago"
         if second_diff < 3600:
             return ago(second_diff / 60, "minute")
         if second_diff < 7200:
@@ -111,9 +122,11 @@ def pretty_date(time=None):
         return ago(day_diff / 30, "month")
     return ago(day_diff / 365, "year")
 
+
 def pretty_sender(fromline):
     name, addr = parseaddr(fromline)
     return name or addr
+
 
 def message_lines(messages):
     for message in messages:
@@ -122,6 +135,7 @@ def message_lines(messages):
             sender=pretty_sender(message.get_header('from')),
             date=pretty_date(message.get_date()),
             tags=' '.join(filter_tags(message.get_tags())))
+
 
 def get_query():
     config = configparser.ConfigParser()
@@ -136,9 +150,9 @@ def get_query():
     return query
 
 
-
 class NotmuchNotify(dbus.service.Object):
     ICON = '/usr/share/icons/gnome/scalable/status/mail-unread-symbolic.svg'
+
     def __init__(self, bus, path, name):
         dbus.service.Object.__init__(self, bus, path, name)
         Notify.init(APPLICATION_NAME)
@@ -160,7 +174,8 @@ class NotmuchNotify(dbus.service.Object):
         messages = list(exclude_recently_seen(query.search_messages()))
         if messages:
             self.notification.update(
-                    summary="{count} unread messages".format(count=query.count_messages()),
+                    summary="{count} unread messages".format(
+                        count=query.count_messages()),
                     body='\n'.join(message_lines(messages)),
                     icon=self.ICON)
             self.notification.show()
