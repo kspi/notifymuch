@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
-import notmuch
-from gi.repository import Notify, GLib
-import time
 from email.utils import parseaddr
-import xdg.BaseDirectory
-import pickle
+import configparser
 import os
+import pickle
 import sys
 import time
-import configparser
+import time
+
+from gi.repository import Notify, GLib
+import dbus
+import dbus.bus
+import dbus.mainloop.glib
+import dbus.service
+import notmuch
+import xdg.BaseDirectory
 
 APPLICATION_NAME = 'notmuch-notify'
+DBUS_NAME = 'net.wemakethings.NotmuchNotify'
 
 CACHE_DIR = xdg.BaseDirectory.save_cache_path(APPLICATION_NAME)
 CONFIG_DIR = xdg.BaseDirectory.save_config_path(APPLICATION_NAME)
@@ -117,10 +123,7 @@ def message_lines(messages):
             date=pretty_date(message.get_date()),
             tags=' '.join(filter_tags(message.get_tags())))
 
-def run_mutt():
-    os.execvp("gnome-terminal", ["gnome-terminal", "-x", "mutt", "-y"])
-
-def main(console):
+def get_query():
     config = configparser.ConfigParser()
     if not config.read(CONFIG_FILE):
         config[APPLICATION_NAME] = {'query': 'is:unread'}
@@ -130,22 +133,61 @@ def main(console):
     db = notmuch.Database()
     query = notmuch.Query(db, config[APPLICATION_NAME]['query'])
     query.set_sort(notmuch.Query.SORT.OLDEST_FIRST)
-    if console:
-        for line in message_lines(query.search_messages()):
-            print(line)
-    else:
+    return query
+
+
+
+class NotmuchNotify(dbus.service.Object):
+    ICON = '/usr/share/icons/gnome/scalable/status/mail-unread-symbolic.svg'
+    def __init__(self, bus, path, name):
+        dbus.service.Object.__init__(self, bus, path, name)
+        Notify.init(APPLICATION_NAME)
+        self.main_loop = GLib.MainLoop()
+        self.notification = Notify.Notification.new('', '', self.ICON)
+        self.notification.set_timeout(Notify.EXPIRES_NEVER)
+        self.notification.add_action('mutt', 'Run Mutt', self.action_mutt)
+        self.notification.connect('closed', lambda e: self.exit())
+
+    def exit(self):
+        self.main_loop.quit()
+
+    def action_mutt(self, action, user_data):
+        os.execvp("gnome-terminal", ["gnome-terminal", "-x", "mutt", "-y"])
+
+    @dbus.service.method(DBUS_NAME, in_signature='', out_signature='')
+    def update(self):
+        query = get_query()
         messages = list(exclude_recently_seen(query.search_messages()))
         if messages:
-            main_loop = GLib.MainLoop()
-            Notify.init(APPLICATION_NAME)
-            n = Notify.Notification.new(
-                    summary="{count} new messages".format(count=query.count_messages()),
+            self.notification.update(
+                    summary="{count} unread messages".format(count=query.count_messages()),
                     body='\n'.join(message_lines(messages)),
-                    icon='/usr/share/icons/gnome/scalable/status/mail-unread-symbolic.svg')
-            n.add_action('mutt', 'Run Mutt', lambda a, b: run_mutt())
-            n.connect('closed', lambda a: main_loop.quit())
-            n.show()
-            main_loop.run()
+                    icon=self.ICON)
+            self.notification.show()
+        else:
+            self.exit()
+
+    @dbus.service.method(DBUS_NAME, in_signature='', out_signature='')
+    def run(self):
+        GLib.idle_add(self.update)
+        self.main_loop.run()
+
+
+def main(console):
+    if console:
+        for line in message_lines(get_query().search_messages()):
+            print(line)
+    else:
+        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+        bus = dbus.SessionBus()
+        request = bus.request_name(DBUS_NAME, dbus.bus.NAME_FLAG_DO_NOT_QUEUE)
+        if request == dbus.bus.REQUEST_NAME_REPLY_EXISTS:
+            obj = bus.get_object(DBUS_NAME, "/")
+            app = dbus.Interface(obj, DBUS_NAME)
+            app.update()
+        elif os.fork() == 0:
+            app = NotmuchNotify(bus, '/', DBUS_NAME)
+            app.run()
 
 if __name__ == '__main__':
     main(console='--console' in sys.argv)
