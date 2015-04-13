@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import notmuch
-from gi.repository import Notify
+from gi.repository import Notify, GLib
 import time
 from email.utils import parseaddr
 import xdg.BaseDirectory
@@ -117,6 +117,9 @@ def message_lines(messages):
             date=pretty_date(message.get_date()),
             tags=' '.join(filter_tags(message.get_tags())))
 
+def run_mutt():
+    os.execvp("gnome-terminal", ["gnome-terminal", "-x", "mutt", "-y"])
+
 def main(console):
     config = configparser.ConfigParser()
     if not config.read(CONFIG_FILE):
@@ -133,12 +136,16 @@ def main(console):
     else:
         messages = list(exclude_recently_seen(query.search_messages()))
         if messages:
-            Notify.init('notmuch-notify')
+            main_loop = GLib.MainLoop()
+            Notify.init(APPLICATION_NAME)
             n = Notify.Notification.new(
                     summary="{count} new messages".format(count=query.count_messages()),
                     body='\n'.join(message_lines(messages)),
                     icon='/usr/share/icons/gnome/scalable/status/mail-unread-symbolic.svg')
+            n.add_action('mutt', 'Run Mutt', lambda a, b: run_mutt())
+            n.connect('closed', lambda a: main_loop.quit())
             n.show()
+            main_loop.run()
 
 if __name__ == '__main__':
     main(console='--console' in sys.argv)
