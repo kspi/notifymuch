@@ -8,13 +8,20 @@ import pickle
 import os
 import sys
 import time
+import configparser
 
-CACHE_PATH = xdg.BaseDirectory.save_cache_path('notmuch-notify')
+APPLICATION_NAME = 'notmuch-notify'
+
+CACHE_DIR = xdg.BaseDirectory.save_cache_path(APPLICATION_NAME)
+CONFIG_DIR = xdg.BaseDirectory.save_config_path(APPLICATION_NAME)
+
+LAST_SEEN_FILE = os.path.join(CACHE_DIR, 'last_seen')
+CONFIG_FILE = os.path.join(CONFIG_DIR, APPLICATION_NAME + '.cfg')
 
 class LastSeen(dict):
     def __enter__(self):
         try:
-            with open(os.path.join(CACHE_PATH, 'last_seen'), 'rb') as f:
+            with open(LAST_SEEN_FILE, 'rb') as f:
                 self.update(pickle.load(f))
         except FileNotFoundError:
             pass
@@ -22,7 +29,7 @@ class LastSeen(dict):
             print("notmuch-notify: warning: {}".format(e), file=sys.stderr)
         return self
     def __exit__(self, type, value, traceback):
-        with open(os.path.join(CACHE_PATH, 'last_seen'), 'wb') as f:
+        with open(LAST_SEEN_FILE, 'wb') as f:
             pickle.dump(self, f)
 
 def exclude_recently_seen(messages):
@@ -111,8 +118,14 @@ def message_lines(messages):
             tags=' '.join(filter_tags(message.get_tags())))
 
 def main(console):
+    config = configparser.ConfigParser()
+    if not config.read(CONFIG_FILE):
+        config[APPLICATION_NAME] = {'query': 'is:unread'}
+        with open(CONFIG_FILE, "w") as f:
+            config.write(f)
+
     db = notmuch.Database()
-    query = notmuch.Query(db, 'is:unread and not (is:spam or is:trash or is:sent)')
+    query = notmuch.Query(db, config[APPLICATION_NAME]['query'])
     query.set_sort(notmuch.Query.SORT.OLDEST_FIRST)
     if console:
         for line in message_lines(query.search_messages()):
