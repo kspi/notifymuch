@@ -13,6 +13,8 @@ __all__ = ["Messages"]
 CACHE_DIR = xdg.BaseDirectory.save_cache_path('notifymuch')
 CONFIG_DIR = xdg.BaseDirectory.save_config_path('notifymuch')
 
+RECENCY_INTERVAL = 60 * 60 * 24 * 2  # Two days in seconds
+
 LAST_SEEN_FILE = os.path.join(CACHE_DIR, 'last_seen')
 CONFIG_FILE = os.path.join(CONFIG_DIR, 'notifymuch' + '.cfg')
 
@@ -25,7 +27,7 @@ def exclude_recently_seen(messages):
     with PersistentDict(LAST_SEEN_FILE) as last_seen:
         now = time.time()
         for k in list(last_seen.keys()):
-            if now - last_seen[k] > 60 * 60 * 24 * 2:  # Two days
+            if now - last_seen[k] > RECENCY_INTERVAL:
                 del last_seen[k]
         for message in messages:
             m_id = message.get_message_id()
