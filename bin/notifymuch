@@ -7,5 +7,5 @@ if '--console' in sys.argv:
     if summary:
         print(summary)
 else:
-    from notifymuch.service import show_notification
+    from notifymuch.notification import show_notification
     show_notification()
