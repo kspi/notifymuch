@@ -26,7 +26,10 @@ class NotifymuchNotification(Gio.Application):
         self.notification = Notify.Notification.new('', '', self.ICON)
         self.notification.set_timeout(Notify.EXPIRES_NEVER)
         if config.get("mail_client"):
-            self.notification.add_action('mail-client', 'Run mail client', self.action_mail_client)
+            self.notification.add_action(
+                    'mail-client',
+                    'Run mail client',
+                    self.action_mail_client)
         self.notification.connect('closed', lambda e: self.release())
         self.hold()
 
