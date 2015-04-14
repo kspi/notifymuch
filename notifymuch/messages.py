@@ -3,8 +3,8 @@ import os
 import time
 import xdg.BaseDirectory
 import notmuch
+import shelve
 from notifymuch import config
-from notifymuch.persistentdict import PersistentDict
 
 
 __all__ = ["Messages"]
@@ -21,7 +21,7 @@ NONINTERESTING_TAGS = frozenset([
 
 
 def exclude_recently_seen(messages):
-    with PersistentDict(LAST_SEEN_FILE) as last_seen:
+    with shelve.open(LAST_SEEN_FILE) as last_seen:
         now = time.time()
         for k in list(last_seen.keys()):
             if now - last_seen[k] > RECENCY_INTERVAL:
