@@ -4,6 +4,8 @@ import sys
 
 if '--console' in sys.argv:
     from notifymuch.messages import Messages
+    from notifymuch import config
+    config.load()
     summary = Messages().summary()
     if summary:
         print(summary)
