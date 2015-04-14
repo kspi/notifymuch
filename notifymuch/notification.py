@@ -44,8 +44,8 @@ class NotifymuchNotification(Gio.Application):
 
     def action_mail_client(self, action, data):
         self.notification.close()
+        tokens = shlex.split(config.get("mail_client"))
         if os.fork() == 0:
-            tokens = shlex.split(config.get("mail_client"))
             os.execvp(tokens[0], tokens)
 
 
