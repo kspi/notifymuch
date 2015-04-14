@@ -21,18 +21,20 @@ class NotifymuchNotification(Gio.Application):
         self.connect('activate', self.on_activate)
 
     def on_startup(self, data):
+        config.load()
         Notify.init('notifymuch')
         self.notification = Notify.Notification.new('', '', self.ICON)
         self.notification.set_timeout(Notify.EXPIRES_NEVER)
-        self.notification.add_action('mail-client', 'Run mail client', self.action_mail_client)
+        if config.get("mail_client"):
+            self.notification.add_action('mail-client', 'Run mail client', self.action_mail_client)
         self.notification.connect('closed', lambda e: self.release())
+        self.hold()
 
     def on_activate(self, data):
         config.load()
         messages = Messages()
         summary = messages.unseen_summary()
         if summary != "":
-            self.hold()
             self.notification.update(
                     summary="{count} unread messages".format(
                         count=messages.count()),
@@ -42,7 +44,6 @@ class NotifymuchNotification(Gio.Application):
 
     def action_mail_client(self, action, data):
         self.notification.close()
-        self.quit()
         if os.fork() == 0:
             tokens = shlex.split(config.get("mail_client"))
             os.execvp(tokens[0], tokens)
