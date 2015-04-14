@@ -1,9 +1,9 @@
 from email.utils import parseaddr
-import configparser
 import os
 import time
 import xdg.BaseDirectory
 import notmuch
+from notifymuch import config
 from notifymuch.persistentdict import PersistentDict
 
 
@@ -11,12 +11,9 @@ __all__ = ["Messages"]
 
 
 CACHE_DIR = xdg.BaseDirectory.save_cache_path('notifymuch')
-CONFIG_DIR = xdg.BaseDirectory.save_config_path('notifymuch')
+LAST_SEEN_FILE = os.path.join(CACHE_DIR, 'last_seen')
 
 RECENCY_INTERVAL = 60 * 60 * 24 * 2  # Two days in seconds
-
-LAST_SEEN_FILE = os.path.join(CACHE_DIR, 'last_seen')
-CONFIG_FILE = os.path.join(CONFIG_DIR, 'notifymuch' + '.cfg')
 
 NONINTERESTING_TAGS = frozenset([
         'inbox', 'unread', 'attachment', 'replied', 'sent',
@@ -117,14 +114,8 @@ def summary(messages):
 
 class Messages:
     def __init__(self):
-        config = configparser.ConfigParser()
-        if not config.read(CONFIG_FILE):
-            config['notifymuch'] = {'query': 'is:unread and is:inbox'}
-            with open(CONFIG_FILE, "w") as f:
-                config.write(f)
-
         db = notmuch.Database()
-        self.query = notmuch.Query(db, config['notifymuch']['query'])
+        self.query = notmuch.Query(db, config.get('query'))
         self.query.set_sort(notmuch.Query.SORT.OLDEST_FIRST)
 
     def count(self):

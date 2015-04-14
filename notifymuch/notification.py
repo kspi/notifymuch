@@ -1,6 +1,8 @@
 import sys
 import os
+import shlex
 from gi.repository import Notify, Gio
+from notifymuch import config
 from notifymuch.messages import Messages
 
 
@@ -22,10 +24,11 @@ class NotifymuchNotification(Gio.Application):
         Notify.init('notifymuch')
         self.notification = Notify.Notification.new('', '', self.ICON)
         self.notification.set_timeout(Notify.EXPIRES_NEVER)
-        self.notification.add_action('mutt', 'Run Mutt', self.action_mutt)
+        self.notification.add_action('mail-client', 'Run mail client', self.action_mail_client)
         self.notification.connect('closed', lambda e: self.release())
 
     def on_activate(self, data):
+        config.load()
         messages = Messages()
         summary = messages.unseen_summary()
         if summary != "":
@@ -37,11 +40,12 @@ class NotifymuchNotification(Gio.Application):
                     icon=self.ICON)
             self.notification.show()
 
-    def action_mutt(self, action, data):
+    def action_mail_client(self, action, data):
         self.notification.close()
         self.quit()
         if os.fork() == 0:
-            os.execvp("gnome-terminal", ["gnome-terminal", "-x", "mutt", "-y"])
+            tokens = shlex.split(config.get("mail_client"))
+            os.execvp(tokens[0], tokens)
 
 
 def show_notification():
