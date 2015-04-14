@@ -1,6 +1,6 @@
 import sys
 import os
-from gi.repository import Notify, GLib, Gio
+from gi.repository import Notify, Gio
 from notifymuch.messages import Messages
 
 
@@ -11,7 +11,9 @@ class NotifymuchNotification(Gio.Application):
     ICON = '/usr/share/icons/gnome/scalable/status/mail-unread-symbolic.svg'
 
     def __init__(self):
-        Gio.Application.__init__(self, application_id="net.wemakethings.Notifymuch",
+        Gio.Application.__init__(
+                self,
+                application_id="net.wemakethings.Notifymuch",
                 flags=Gio.ApplicationFlags.FLAGS_NONE)
         self.connect('startup', self.on_startup)
         self.connect('activate', self.on_activate)
@@ -40,6 +42,7 @@ class NotifymuchNotification(Gio.Application):
         self.quit()
         if os.fork() == 0:
             os.execvp("gnome-terminal", ["gnome-terminal", "-x", "mutt", "-y"])
+
 
 def show_notification():
     # Gio.Application.run blocks in case this is the primary instance, and
