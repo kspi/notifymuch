@@ -12,8 +12,8 @@ seen' and not shown again for two days.
 Installation and usage
 ----------------------
 
-The program requires Python 3, setuptools, pyxdg, pygobject and notmuch. It
-can be installed together with its dependencies using::
+The program requires Python 3, setuptools, pygobject and notmuch.
+It can be installed together with its dependencies using::
 
     pip install .
 

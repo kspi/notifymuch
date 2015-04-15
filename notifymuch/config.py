@@ -1,13 +1,13 @@
 import os
 import configparser
-import xdg.BaseDirectory
+from gi.repository import GLib
 
 
 __all__ = ['load', 'get']
 
 
-CONFIG_DIR = xdg.BaseDirectory.save_config_path('notifymuch')
-CONFIG_FILE = os.path.join(CONFIG_DIR, 'notifymuch' + '.cfg')
+CONFIG_DIR = os.path.join(GLib.get_user_config_dir(), 'notifymuch')
+CONFIG_FILE = os.path.join(CONFIG_DIR, 'notifymuch.cfg')
 
 DEFAULT_CONFIG = {
     'query': 'is:unread and is:inbox',
@@ -21,6 +21,7 @@ def load():
     global CONFIG
     CONFIG['notifymuch'] = DEFAULT_CONFIG
     if not CONFIG.read(CONFIG_FILE):
+        os.makedirs(CONFIG_DIR, exist_ok=True)
         with open(CONFIG_FILE, "w") as f:
             CONFIG.write(f)
 

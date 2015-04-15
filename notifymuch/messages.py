@@ -1,16 +1,16 @@
 from email.utils import parseaddr
 import os
 import time
-import xdg.BaseDirectory
-import notmuch
 import shelve
+import notmuch
+from gi.repository import GLib
 from notifymuch import config
 
 
 __all__ = ["Messages"]
 
 
-CACHE_DIR = xdg.BaseDirectory.save_cache_path('notifymuch')
+CACHE_DIR = os.path.join(GLib.get_user_cache_dir(), 'notifymuch')
 LAST_SEEN_FILE = os.path.join(CACHE_DIR, 'last_seen')
 
 RECENCY_INTERVAL = 60 * 60 * 24 * 2  # Two days in seconds
@@ -21,6 +21,7 @@ NONINTERESTING_TAGS = frozenset([
 
 
 def exclude_recently_seen(messages):
+    os.makedirs(CACHE_DIR, exist_ok=True)
     with shelve.open(LAST_SEEN_FILE) as last_seen:
         now = time.time()
         for k in list(last_seen.keys()):
