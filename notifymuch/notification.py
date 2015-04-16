@@ -32,7 +32,7 @@ class NotifymuchNotification(Gio.Application):
         self.hold()
 
     def on_activate(self, data):
-        config.load()
+        config.load()  # Reload config on each update.
         messages = Messages()
         summary = messages.unseen_summary()
         if summary == "":
