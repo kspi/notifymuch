@@ -13,19 +13,12 @@ __all__ = ["Messages"]
 CACHE_DIR = os.path.join(GLib.get_user_cache_dir(), 'notifymuch')
 LAST_SEEN_FILE = os.path.join(CACHE_DIR, 'last_seen')
 
-RECENCY_INTERVAL = 60 * 60 * 24 * 2  # Two days in seconds
-
-NONINTERESTING_TAGS = frozenset([
-        'inbox', 'unread', 'attachment', 'replied', 'sent',
-        'encrypted', 'signed'])
-
-
 def exclude_recently_seen(messages):
     os.makedirs(CACHE_DIR, exist_ok=True)
     with shelve.open(LAST_SEEN_FILE) as last_seen:
         now = time.time()
         for k in list(last_seen.keys()):
-            if now - last_seen[k] > RECENCY_INTERVAL:
+            if now - last_seen[k] > int(config.get('recency_interval_hours')):
                 del last_seen[k]
         for message in messages:
             m_id = message.get_message_id()
@@ -35,8 +28,9 @@ def exclude_recently_seen(messages):
 
 
 def filter_tags(ts):
+    hidden_tags = frozenset(config.get('hidden_tags').split(' '))
     for t in ts:
-        if t not in NONINTERESTING_TAGS:
+        if t not in hidden_tags:
             yield t
 
 

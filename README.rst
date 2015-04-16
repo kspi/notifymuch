@@ -6,7 +6,7 @@ mail (or actually any search query) in the notmuch database. The notification
 can optionally have a button to run a mail client.
 
 When a message is shown in a notification, it is internally marked as 'recently
-seen' and not shown again for two days.
+seen' and not shown again for two days (configurable).
 
 
 Installation and usage
@@ -36,3 +36,10 @@ query
 mail_client
   The command to launch the preffered mail client. If empty, the button
   isn't shown. Default is ``gnome-terminal -x mutt -y``.
+
+recency_interval_hours
+  Each message is notified about once in this time interval. Default is ``48``.
+
+hidden_tags
+  Tag names that are not shown in the notification. Default is
+  ``inbox unread attachment replied sent encrypted signed``.
