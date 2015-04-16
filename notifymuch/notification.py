@@ -9,7 +9,7 @@ __all__ = ["show_notification"]
 
 
 class NotifymuchNotification(Gio.Application):
-    ICON = '/usr/share/icons/gnome/scalable/status/mail-unread-symbolic.svg'
+    ICON = 'mail-unread-symbolic'
 
     def __init__(self):
         Gio.Application.__init__(
