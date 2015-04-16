@@ -1,8 +1,22 @@
 #!/usr/bin/env python3
 import os
 import sys
+import argparse
 
-if '--console' in sys.argv:
+parser = argparse.ArgumentParser(
+        description='''
+            Display desktop notifications for unread mail in notmuch database.
+            ''')
+parser.set_defaults(print_summary=False)
+parser.add_argument('--print-summary', dest='print_summary',
+                    action='store_true',
+                    help="""
+                    Just print the query summary to stdout, without recency
+                    tracking.
+                    """)
+args = parser.parse_args()
+
+if args.print_summary:
     from notifymuch.messages import Messages
     from notifymuch import config
     config.load()
