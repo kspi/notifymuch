@@ -34,7 +34,7 @@ query
   ``is:unread and is:inbox``.
   
 mail_client
-  The command to launch the preffered mail client. If empty, the button
+  The command to launch the preferred mail client. If empty, the button
   isn't shown. Default is ``gnome-terminal -x mutt -y``.
 
 recency_interval_hours
