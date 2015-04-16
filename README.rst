@@ -38,7 +38,8 @@ mail_client
   isn't shown. Default is ``gnome-terminal -x mutt -y``.
 
 recency_interval_hours
-  Each message is notified about once in this time interval. Default is ``48``.
+  Each message is notified about at most once in this time interval. Default is
+  ``48``.
 
 hidden_tags
   Tag names that are not shown in the notification. Default is
