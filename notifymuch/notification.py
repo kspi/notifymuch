@@ -22,6 +22,7 @@ class NotifymuchNotification(Gio.Application):
         config.load()
         Notify.init('notifymuch')
         self.notification = Notify.Notification.new('', '', self.ICON)
+        self.notification.set_category('email.arrived')
         if config.get("mail_client"):
             self.notification.add_action(
                     'mail-client',
