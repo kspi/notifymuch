@@ -13,6 +13,7 @@ __all__ = ["Messages"]
 CACHE_DIR = os.path.join(GLib.get_user_cache_dir(), 'notifymuch')
 LAST_SEEN_FILE = os.path.join(CACHE_DIR, 'last_seen')
 
+
 def exclude_recently_seen(messages):
     os.makedirs(CACHE_DIR, exist_ok=True)
     with shelve.open(LAST_SEEN_FILE) as last_seen:
@@ -98,12 +99,20 @@ def pretty_sender(fromline):
     return name or addr
 
 
+def tags_prefix(tags):
+    tags = list(tags)
+    if tags:
+        return '[{tags}] '.format(tags=' '.join(tags))
+    else:
+        return ''
+
+
 def summary(messages):
-    return '\n'.join('[{tags}] {subject} ({sender}, {date})'.format(
+    return '\n'.join('{tags}{subject} ({sender}, {date})'.format(
                 subject=ellipsize(message.get_header('subject')),
                 sender=pretty_sender(message.get_header('from')),
                 date=pretty_date(message.get_date()),
-                tags=' '.join(filter_tags(message.get_tags())))
+                tags=tags_prefix(filter_tags(message.get_tags())))
             for message in messages)
 
 
