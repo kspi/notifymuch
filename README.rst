@@ -5,6 +5,9 @@ This is a simple program that displays desktop notifications for unread
 mail (or actually any search query) in the notmuch database. The notification
 can optionally have a button to run a mail client.
 
+.. image:: http://i.imgur.com/F3uAQmt.png                                                                                                
+    :alt: Screenshot of notifymuch
+
 When a message is shown in a notification, it is internally marked as 'recently
 seen' and not shown again for two days (configurable).
 
