@@ -23,11 +23,13 @@ class NotifymuchNotification(Gio.Application):
         config.load()
         Notify.init('notifymuch')
 
-        icon = Gtk.IconTheme.get_default ().lookup_icon (self.ICON,
-                self.ICON_SIZE, 0)
-        self.ICON = icon.get_filename ()
+        # Use GTK to look up the icon to properly fallback to 'mail-unread'.
+        icon = Gtk.IconTheme.get_default().lookup_icon(
+                self.ICON,
+                self.ICON_SIZE,
+                0)
 
-        self.notification = Notify.Notification.new('', '', self.ICON)
+        self.notification = Notify.Notification.new('', '', icon.get_filename())
         self.notification.set_category('email.arrived')
         if config.get("mail_client"):
             self.notification.add_action(
