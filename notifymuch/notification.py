@@ -28,8 +28,9 @@ class NotifymuchNotification(Gio.Application):
                 self.ICON,
                 self.ICON_SIZE,
                 0)
+        self.icon_filename = icon.get_filename()
 
-        self.notification = Notify.Notification.new('', '', icon.get_filename())
+        self.notification = Notify.Notification.new('', '', self.icon_filename)
         self.notification.set_category('email.arrived')
         if config.get("mail_client"):
             self.notification.add_action(
@@ -50,7 +51,7 @@ class NotifymuchNotification(Gio.Application):
                     summary="{count} unread messages".format(
                         count=messages.count()),
                     body=summary,
-                    icon=self.ICON)
+                    icon=self.icon_filename)
             self.notification.show()
 
     def action_mail_client(self, action, data):
