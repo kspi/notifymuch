@@ -1,6 +1,6 @@
 import shlex
 import subprocess
-from gi.repository import Notify, Gio
+from gi.repository import Notify, Gio, Gtk
 from notifymuch import config
 from notifymuch.messages import Messages
 
@@ -10,6 +10,7 @@ __all__ = ["show_notification"]
 
 class NotifymuchNotification(Gio.Application):
     ICON = 'mail-unread-symbolic'
+    ICON_SIZE = 64
 
     def __init__(self):
         Gio.Application.__init__(
@@ -21,7 +22,14 @@ class NotifymuchNotification(Gio.Application):
     def on_startup(self, data):
         config.load()
         Notify.init('notifymuch')
-        self.notification = Notify.Notification.new('', '', self.ICON)
+
+        # Use GTK to look up the icon to properly fallback to 'mail-unread'.
+        icon = Gtk.IconTheme.get_default().lookup_icon(
+                self.ICON,
+                self.ICON_SIZE,
+                0)
+
+        self.notification = Notify.Notification.new('', '', icon.get_filename())
         self.notification.set_category('email.arrived')
         if config.get("mail_client"):
             self.notification.add_action(
