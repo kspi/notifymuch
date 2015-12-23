@@ -1,6 +1,13 @@
 import shlex
 import subprocess
+
+import gi
+
+gi.require_version ('Notify', '0.7')
+gi.require_version ('Gtk', '3.0')
+
 from gi.repository import Notify, Gio, Gtk
+
 from notifymuch import config
 from notifymuch.messages import Messages
 
